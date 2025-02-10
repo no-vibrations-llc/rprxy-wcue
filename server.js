@@ -4,11 +4,7 @@ var https = require('https');
 var url = require('url');
 var path = require('path');
 
-var api = require('./api.js');
-var blocked = require('./static/blocked.json');
-var reBlocked = require('./static/re_blocked.json');
-
-var port = process.env.PORT || 80;
+var port = process.env.PORT || 8080;
 var subdomainsAsPath = false;
 var serveHomepage = true;
 var serveHomepageOnAllSubdomains = false;
@@ -75,35 +71,6 @@ httpProxy.on('error', onProxyError);
 httpProxy.on('proxyReq', onProxyReq);
 
 var app = express();
-
-app.use('/proxy', express.static('./static'));
-app.use('/proxy', api);
-
-app.use(function (req, res, next) {
-  if (serveHomepage && stripSub(req.url)[0] === '/') {
-    if (serveHomepageOnAllSubdomains || !getSubdomain(req)) {
-      res.sendFile(path.join(__dirname, '/static/home.html'));
-      return;
-    }
-  }
-  next();
-});
-
-app.use(function (req, res, next) {
-  for (var i = 0; i < blocked.length; i++) {
-    if (req.url === blocked[i]) {
-      res.end('URL blocked.');
-      return;
-    }
-  }
-  for (i = 0; i < reBlocked.length; i++) {
-    if (req.url.match(reBlocked[i])) {
-      res.end('URL blocked.');
-      return;
-    }
-  }
-  next();
-});
 
 app.use(function (req, res, next) {
   console.log('PROXY REQUEST; HOST: ' + req.headers.host + '; URL: ' + req.url + '; OPT: ' + req.body + '; COOKIE: ' + req.headers.cookie + ';');
